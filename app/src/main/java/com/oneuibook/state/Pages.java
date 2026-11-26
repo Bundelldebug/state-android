@@ -51,7 +51,7 @@ final class Pages {
         void applyInsets() {
             int top = Ui.statusInset + Ui.dp(62);
             int bot = Math.max(Ui.navInset, Ui.dp(12)) + Ui.dp(92);
-            content.setPadding(0, top, 0, bot);
+            content.setPadding(Ui.cutoutLeft, top, Ui.cutoutRight, bot);
         }
 
         void rebuild() {
@@ -350,7 +350,10 @@ final class Pages {
         LinearLayout titleRow = new LinearLayout(m);
         titleRow.setOrientation(LinearLayout.HORIZONTAL);
         titleRow.setGravity(Gravity.CENTER_VERTICAL);
-        titleRow.addView(Ui.text(m, a.name, 15.5f, Ui.semibold, Ui.text()));
+        TextView nameTv = Ui.text(m, a.name, 15.5f, Ui.semibold, Ui.text());
+        nameTv.setMaxLines(1);
+        nameTv.setEllipsize(TextUtils.TruncateAt.END);
+        titleRow.addView(nameTv, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         String verText;
         int verColor;
@@ -368,8 +371,9 @@ final class Pages {
             verColor = Ui.text3();
         }
         TextView verTv = Ui.text(m, verText, 11.5f, a.hasUpdate() ? Ui.bold : Ui.medium, verColor);
+        verTv.setSingleLine(true);
         LinearLayout.LayoutParams vlp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        vlp.leftMargin = Ui.dp(7);
+        vlp.leftMargin = Ui.dp(6);
         titleRow.addView(verTv, vlp);
         info.addView(titleRow, Widgets.MW);
 
@@ -380,19 +384,22 @@ final class Pages {
 
         row.addView(info, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
-        // Right-hand action pill: 업데이트 / 열기 / 설치
+        // Right-hand action pill: 업데이트 / 실행 중(자기 자신) / 열기 / 설치
         boolean isUpdate = a.hasUpdate();
+        boolean isSelf = a.pkg.equals(m.getPackageName());
         String btnLabel = a.downloading ? "…"
                 : (isUpdate ? m.getString(R.string.btn_update)
-                : (a.installed ? m.getString(R.string.btn_open) : m.getString(R.string.btn_install)));
+                : (isSelf ? "최신"
+                : (a.installed ? m.getString(R.string.btn_open) : m.getString(R.string.btn_install))));
         int btnBg = isUpdate ? Ui.ACCENT : (a.installed ? Ui.chip() : Ui.alpha(Ui.ACCENT, 0.14f));
-        int btnFg = isUpdate ? 0xFFFFFFFF : (a.installed ? Ui.text() : Ui.ACCENT);
+        int btnFg = isUpdate ? 0xFFFFFFFF : (isSelf ? Ui.text2() : (a.installed ? Ui.text() : Ui.ACCENT));
 
         TextView actionBtn = Ui.text(m, btnLabel, 12.5f, Ui.semibold, btnFg);
         actionBtn.setPadding(Ui.dp(13), Ui.dp(7), Ui.dp(13), Ui.dp(7));
         actionBtn.setBackground(Ui.round(btnBg, 100));
         Runnable primaryAction = () -> {
             if (isUpdate || !a.installed) AppCatalog.installOrUpdate(m, a);
+            else if (isSelf) m.onRefresh();
             else AppCatalog.launchApp(m, a);
         };
         actionBtn.setOnClickListener(v -> primaryAction.run());

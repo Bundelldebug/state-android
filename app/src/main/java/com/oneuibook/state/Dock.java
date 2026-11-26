@@ -109,6 +109,15 @@ final class Dock extends FrameLayout {
         field.setGravity(Gravity.CENTER_VERTICAL);
         field.setInputType(InputType.TYPE_CLASS_TEXT);
         field.setImeOptions(EditorInfo.IME_ACTION_SEARCH);
+        field.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH || actionId == EditorInfo.IME_ACTION_DONE) {
+                InputMethodManager imm = (InputMethodManager) c.getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (imm != null) imm.hideSoftInputFromWindow(field.getWindowToken(), 0);
+                field.clearFocus();
+                return true;
+            }
+            return false;
+        });
         field.setVisibility(GONE);
         field.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}

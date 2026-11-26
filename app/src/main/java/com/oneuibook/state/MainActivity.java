@@ -16,7 +16,7 @@ import android.widget.FrameLayout;
  * Manages all 9 published apps (Prism, Play Video, Viewer, Workspace, Aurora, Linux Desktop, Checker, Stock, State).
  */
 public final class MainActivity extends Activity implements Dock.Listener, Header.Listener, AppCatalog.Listener {
-    static final String VERSION = "9.5.2";
+    static final String VERSION = "9.5.3";
 
     FrameLayout root;
     Glass.Backdrop backdrop;
@@ -109,7 +109,26 @@ public final class MainActivity extends Activity implements Dock.Listener, Heade
     @Override protected void onResume() {
         super.onResume();
         AppCatalog.refreshInstalled(this);
+        AppCatalog.continuePendingQueue(this);
         refreshAllPages();
+    }
+
+    @Override public void onConfigurationChanged(android.content.res.Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        Ui.init(this, AppCatalog.prefs(this));
+        getWindow().getDecorView().setBackgroundColor(Ui.bg());
+        backdrop.setBackgroundColor(Ui.bg());
+        applySystemBars(!Ui.dark);
+        root.post(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            header.getLayoutParams().height = Ui.statusInset + Ui.dp(74);
+            header.requestLayout();
+            for (Pages.BasePage p : tabs) if (p != null) p.applyInsets();
+            if (searchPage != null) searchPage.applyInsets();
+            dock.select(tab, false);
+            dock.requestLayout();
+            refreshAllPages();
+        });
     }
 
     @Override protected void onDestroy() {

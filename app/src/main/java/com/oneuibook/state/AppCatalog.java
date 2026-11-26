@@ -245,8 +245,6 @@ final class AppCatalog {
                     checking = false;
                     lastCheckedMs = System.currentTimeMillis();
                     notifyListeners();
-                } else {
-                    notifyListeners();
                 }
             });
         }
@@ -309,7 +307,10 @@ final class AppCatalog {
         } catch (Throwable ignored) {}
     }
 
+    private static final java.util.ArrayDeque<ModuleApp> UPDATE_QUEUE = new java.util.ArrayDeque<>();
+
     static void installOrUpdate(Activity act, ModuleApp a) {
+        if (a == null || a.downloading) return;
         if (a.apkUrl == null || a.apkUrl.isEmpty()) {
             try { act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(a.pageUrl))); } catch (Throwable ignored) {}
             return;
@@ -332,16 +333,23 @@ final class AppCatalog {
                 .setMimeType("application/vnd.android.package-archive")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 .setDestinationInExternalFilesDir(act, Environment.DIRECTORY_DOWNLOADS, fname);
-        a.downloading = true;
-        a.downloadId = dm.enqueue(req);
+        try {
+            a.downloadId = dm.enqueue(req);
+            a.downloading = true;
+        } catch (Throwable t) {
+            a.downloading = false;
+            Toast.makeText(act, R.string.status_install_failed, Toast.LENGTH_LONG).show();
+            return;
+        }
         notifyListeners();
         Toast.makeText(act, a.name + " " + act.getString(R.string.status_downloading), Toast.LENGTH_SHORT).show();
 
         Context appCtx = act.getApplicationContext();
+        final long expectedId = a.downloadId;
         BroadcastReceiver receiver = new BroadcastReceiver() {
             @Override public void onReceive(Context ctx, Intent intent) {
                 long id = intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1);
-                if (id != a.downloadId) return;
+                if (id != expectedId) return;
                 try { appCtx.unregisterReceiver(this); } catch (Throwable ignored) {}
                 a.downloading = false;
                 notifyListeners();
@@ -377,7 +385,23 @@ final class AppCatalog {
             } catch (Throwable ignored) {}
             return;
         }
-        for (ModuleApp a : list) installOrUpdate(act, a);
+        synchronized (UPDATE_QUEUE) {
+            UPDATE_QUEUE.clear();
+            UPDATE_QUEUE.addAll(list);
+        }
+        continuePendingQueue(act);
+    }
+
+    static void continuePendingQueue(Activity act) {
+        ModuleApp next = null;
+        synchronized (UPDATE_QUEUE) {
+            for (ModuleApp a : APPS) if (a.downloading) return;
+            while (!UPDATE_QUEUE.isEmpty()) {
+                ModuleApp cand = UPDATE_QUEUE.poll();
+                if (cand != null && cand.hasUpdate() && !cand.downloading) { next = cand; break; }
+            }
+        }
+        if (next != null) installOrUpdate(act, next);
     }
 
     /** Clean GitHub Markdown release note renderer (strips raw #, **, `, [label](url)). */

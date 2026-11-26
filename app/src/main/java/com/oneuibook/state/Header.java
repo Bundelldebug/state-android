@@ -65,7 +65,8 @@ final class Header extends View {
         int w = getWidth(), h = getHeight();
         float top = Ui.statusInset + Ui.dpf(12);
         float sz = Ui.dpf(44);
-        pill.set(w - Ui.dpf(16) - sz, top, w - Ui.dpf(16), top + sz);
+        float rightEdge = w - Ui.cutoutRight - Ui.dpf(16);
+        pill.set(rightEdge - sz, top, rightEdge, top + sz);
 
         if (blurAlpha > 0.01f && c.isHardwareAccelerated() && backdrop.recorded && Ui.glass) {
             int sc = c.saveLayer(0, 0, w, h, null);
@@ -94,9 +95,10 @@ final class Header extends View {
 
         if (titleAlpha > 0.01f && !title.isEmpty()) {
             titlePaint.setColor(Ui.alpha(Ui.text(), titleAlpha));
-            float avail = Math.max(Ui.dpf(80), pill.left - Ui.dpf(32));
+            float leftX = Ui.cutoutLeft + Ui.dpf(20);
+            float avail = Math.max(Ui.dpf(80), pill.left - leftX - Ui.dpf(12));
             CharSequence el = TextUtils.ellipsize(title, titlePaint, avail, TextUtils.TruncateAt.END);
-            c.drawText(el, 0, el.length(), Ui.dpf(20), pill.centerY() + titlePaint.getTextSize() * 0.36f, titlePaint);
+            c.drawText(el, 0, el.length(), leftX, pill.centerY() + titlePaint.getTextSize() * 0.36f, titlePaint);
         }
 
         pillGlass.shapes(pill, sz / 2f, null, 0, null, 0);

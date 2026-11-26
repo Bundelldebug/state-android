@@ -98,7 +98,7 @@ public class StateUiTest {
         seedSampleSuiteState();
         act.refreshAllPages();
         assertEquals("스테이트", act.getString(R.string.app_name));
-        assertEquals("9.5.2", MainActivity.VERSION);
+        assertEquals("9.5.3", MainActivity.VERSION);
         assertEquals(2, AppCatalog.pendingUpdates().size());
 
         shot(act.root, 1236, 2745, "phone-apps-light.png");
