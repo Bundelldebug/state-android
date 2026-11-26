@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Centered well inside One UI 72dp squircle (x:32..76, y:35..73) with generous gradient margin -->
+    <!-- Soft drop shadow -->
+    <path android:fillColor="#280B1A5C"
+        android:pathData="M41,39h26a9,9 0 0 1 9,9v18a9,9 0 0 1 -9,9h-26a9,9 0 0 1 -9,-9v-18a9,9 0 0 1 9,-9z" />
+    <!-- Subtle frosted back desktop card (One UI layered depth) -->
+    <path android:fillColor="#5CE8F4FF"
+        android:pathData="M45,33h20a8,8 0 0 1 8,8v16a8,8 0 0 1 -8,8h-20a8,8 0 0 1 -8,-8v-16a8,8 0 0 1 8,-8z" />
+    <!-- Main glossy white desktop window -->
+    <path android:pathData="M41,37h26a9,9 0 0 1 9,9v18a9,9 0 0 1 -9,9h-26a9,9 0 0 1 -9,-9v-18a9,9 0 0 1 9,-9z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="54"
+                android:startY="37"
+                android:endX="54"
+                android:endY="73">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="1" android:color="#FFE3EDFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <!-- Soft tinted title bar -->
+    <path android:fillColor="#1E2B68FF"
+        android:pathData="M41,37h26a9,9 0 0 1 9,9v1h-44v-1a9,9 0 0 1 9,-9z" />
+    <!-- Crisp cobalt > prompt -->
+    <path
+        android:pathData="M42.5,53L49,58L42.5,63"
+        android:strokeWidth="3.8"
+        android:strokeColor="#FF2B68FF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+    <!-- Clean cursor bar -->
+    <path
+        android:pathData="M54,63L64.5,63"
+        android:strokeWidth="3.8"
+        android:strokeColor="#FF2B68FF"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <!-- Emerald live indicator dot -->
+    <path android:fillColor="#FF19C97D"
+        android:pathData="M62.5,42.2a2,2 0 1 1 4,0a2,2 0 1 1 -4,0z" />
+</vector>

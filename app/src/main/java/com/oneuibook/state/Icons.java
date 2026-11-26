@@ -233,34 +233,98 @@ final class Icons {
         }
     }
 
-    /** Crisp tinted squircle badge showing each suite app's signature color and emblem. */
+    /** Renders each suite app's REAL launcher icon (installed PackageManager icon or exact bundled adaptive icon) clipped to a One UI squircle. */
     static final class AppBadgeView extends View {
-        private final int icon;
+        private final android.graphics.drawable.Drawable iconDrawable;
+        private final int fallbackIcon;
         private final int accent;
         private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        private final Path squircle = new Path();
         private final RectF rf = new RectF();
+        private float lastW = -1f, lastH = -1f;
 
-        AppBadgeView(Context c, int icon, int accent) {
+        AppBadgeView(Context c, AppCatalog.ModuleApp app) {
             super(c);
-            this.icon = icon;
-            this.accent = accent;
+            this.fallbackIcon = app.icon;
+            this.accent = app.accent;
+            this.iconDrawable = resolveAppIcon(c, app);
+        }
+
+        private static android.graphics.drawable.Drawable resolveAppIcon(Context c, AppCatalog.ModuleApp app) {
+            // 1) If installed on device (not Robolectric mock), use the live launcher icon directly from PackageManager
+            if (app.installed && !"robolectric".equals(android.os.Build.FINGERPRINT)) {
+                try {
+                    android.graphics.drawable.Drawable pmIcon = c.getPackageManager().getApplicationIcon(app.pkg);
+                    if (pmIcon != null) return pmIcon;
+                } catch (Throwable ignored) {}
+            }
+            // 2) Authentic bundled AdaptiveIconDrawable / Drawable matching every published app's exact launcher icon!
+            try {
+                switch (app.id) {
+                    case "prism": return adaptive(c, R.drawable.icon_prism_bg, R.drawable.icon_prism_fg);
+                    case "play": return adaptive(c, R.drawable.icon_play_bg, R.drawable.icon_play_fg);
+                    case "viewer": return c.getDrawable(R.drawable.icon_viewer);
+                    case "workspace": return adaptive(c, R.drawable.icon_workspace_bg, R.drawable.icon_workspace_fg);
+                    case "aurora": return adaptive(c, R.drawable.icon_aurora_bg, R.drawable.icon_aurora_fg);
+                    case "linux": return adaptive(c, R.drawable.icon_linux_bg, R.drawable.icon_linux_fg);
+                    case "checker": return adaptive(c, R.drawable.icon_checker_bg, R.drawable.icon_checker_fg);
+                    case "stock": return adaptive(c, R.drawable.icon_stock_bg, R.drawable.icon_stock_fg);
+                    case "state": return adaptive(c, R.drawable.ic_launcher_bg, R.drawable.ic_launcher_fg);
+                }
+            } catch (Throwable ignored) {}
+            return null;
+        }
+
+        private static android.graphics.drawable.Drawable adaptive(Context c, int bgRes, int fgRes) {
+            android.graphics.drawable.Drawable bg = c.getDrawable(bgRes);
+            android.graphics.drawable.Drawable fg = c.getDrawable(fgRes);
+            if (bg != null && fg != null) {
+                return new android.graphics.drawable.AdaptiveIconDrawable(bg, fg);
+            }
+            return fg != null ? fg : bg;
+        }
+
+        private void buildSquircle(float w, float h) {
+            squircle.reset();
+            float cx = w * 0.5f, cy = h * 0.5f;
+            float rx = w * 0.495f, ry = h * 0.495f;
+            float n = 2.76f;
+            for (int i = 0; i <= 72; i++) {
+                double a = i * Math.PI * 2.0 / 72.0;
+                double ca = Math.cos(a), sa = Math.sin(a);
+                float x = cx + (float) (Math.signum(ca) * Math.pow(Math.abs(ca), 2.0 / n) * rx);
+                float y = cy + (float) (Math.signum(sa) * Math.pow(Math.abs(sa), 2.0 / n) * ry);
+                if (i == 0) squircle.moveTo(x, y); else squircle.lineTo(x, y);
+            }
+            squircle.close();
         }
 
         @Override protected void onDraw(Canvas c) {
             float w = getWidth(), h = getHeight();
-            rf.set(0, 0, w, h);
-            float rad = w * 0.30f;
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(accent);
-            c.drawRoundRect(rf, rad, rad, paint);
+            if (w <= 0 || h <= 0) return;
+            if (w != lastW || h != lastH) {
+                lastW = w; lastH = h;
+                buildSquircle(w, h);
+            }
+            c.save();
+            c.clipPath(squircle);
+            if (iconDrawable != null) {
+                iconDrawable.setBounds(0, 0, Math.round(w), Math.round(h));
+                iconDrawable.draw(c);
+            } else {
+                rf.set(0, 0, w, h);
+                paint.setStyle(Paint.Style.FILL);
+                paint.setColor(accent);
+                c.drawRect(rf, paint);
+                Icons.draw(c, fallbackIcon, w / 2f, h / 2f, w * 0.56f, 0xFFFFFFFF);
+            }
+            c.restore();
 
-            // Subtle glossy top highlight
+            // Subtle One UI squircle edge hairline for crisp contrast on both light & dark cards
             paint.setStyle(Paint.Style.STROKE);
-            paint.setStrokeWidth(Math.max(1f, Ui.dpf(0.8f)));
-            paint.setColor(0x38FFFFFF);
-            c.drawRoundRect(rf, rad, rad, paint);
-
-            Icons.draw(c, icon, w / 2f, h / 2f, w * 0.56f, 0xFFFFFFFF);
+            paint.setStrokeWidth(Math.max(1f, Ui.dpf(0.65f)));
+            paint.setColor(Ui.dark ? 0x26FFFFFF : 0x16000000);
+            c.drawPath(squircle, paint);
         }
     }
 }

@@ -339,8 +339,8 @@ final class Pages {
         row.setOrientation(LinearLayout.HORIZONTAL);
         row.setGravity(Gravity.CENTER_VERTICAL);
 
-        Icons.AppBadgeView badge = new Icons.AppBadgeView(m, a.icon, a.accent);
-        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(Ui.dp(44), Ui.dp(44));
+        Icons.AppBadgeView badge = new Icons.AppBadgeView(m, a);
+        LinearLayout.LayoutParams blp = new LinearLayout.LayoutParams(Ui.dp(46), Ui.dp(46));
         blp.rightMargin = Ui.dp(13);
         row.addView(badge, blp);
 

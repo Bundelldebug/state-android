@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- One UI style bold two-tone Aurora wave emblem (centered cleanly at 54,54 inside 66dp safe zone) -->
+
+    <!-- Soft translucent echo aurora wave (One UI signature two-tone depth) -->
+    <path
+        android:fillColor="#59FFFFFF"
+        android:pathData="M31,71.5 C31,67.5 34.5,63.2 40.5,60.6 C48.2,57.2 55.8,61.8 63.4,58.6 C68.6,56.4 72.8,52.0 75.5,47.8 C77.6,44.6 81.8,47.0 80.2,51.0 C76.6,60.2 68.4,69.6 56.6,71.8 C46.8,73.6 38.0,77.0 33.4,75.4 C31.8,74.8 31,73.2 31,71.5 Z" />
+
+    <!-- Primary bold pure-white rounded Aurora ribbon arc -->
+    <path
+        android:pathData="M27.5,58.8 C27.5,54.2 32.0,45.8 41.2,40.4 C50.6,34.8 59.8,41.6 68.0,37.8 C72.2,35.8 75.4,32.6 77.6,31.4 C80.2,30.0 82.6,33.0 81.0,36.2 C76.6,45.2 67.2,54.6 55.4,55.2 C45.8,55.8 38.2,60.6 33.2,64.4 C30.0,66.8 27.5,63.0 27.5,58.8 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="28"
+                android:startY="32"
+                android:endX="80"
+                android:endY="66">
+                <item android:offset="0.0" android:color="#FFFFFFFF" />
+                <item android:offset="0.65" android:color="#FFF5FAFF" />
+                <item android:offset="1.0" android:color="#FFDDF4FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

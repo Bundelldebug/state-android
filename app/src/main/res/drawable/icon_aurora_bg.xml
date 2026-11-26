@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Vibrant clean One UI squircle base: luminous cyan -> ocean blue -> aurora indigo -->
+    <path android:pathData="M0,0 L108,0 L108,108 L0,108 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="12"
+                android:startY="8"
+                android:endX="96"
+                android:endY="100">
+                <item android:offset="0.0" android:color="#FF0AD2C8" />
+                <item android:offset="0.52" android:color="#FF1E6BFF" />
+                <item android:offset="1.0" android:color="#FF4F46E5" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>

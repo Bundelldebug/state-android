@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Soft translucent echo play glyph (mathematically centered at y = 54.0) -->
+    <path
+        android:fillColor="#48FFFFFF"
+        android:pathData="M33.0,41.2c0,-4.4 4.8,-7.1 8.6,-4.9l21.6,12.8c3.7,2.2 3.7,7.6 0,9.8L41.6,71.7c-3.8,2.2 -8.6,-0.5 -8.6,-4.9z" />
+    <!-- Primary bold rounded pure-white play glyph (mathematically centered at y = 54.0) -->
+    <path
+        android:pathData="M41.7,40.05c0,-4.6 5,-7.5 9,-5.1l23.4,13.9c3.9,2.3 3.9,8 0,10.3L50.7,73.05c-4,2.4 -9,-0.5 -9,-5.1z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="42"
+                android:startY="34"
+                android:endX="72"
+                android:endY="74">
+                <item android:offset="0" android:color="#FFFFFFFF" />
+                <item android:offset="0.6" android:color="#FFF7FAFF" />
+                <item android:offset="1" android:color="#FFDCEAFF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+</vector>
