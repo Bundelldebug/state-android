@@ -16,7 +16,7 @@ import android.widget.FrameLayout;
  * Manages all 9 published apps (Prism, Play Video, Viewer, Workspace, Aurora, Linux Desktop, Checker, Stock, State).
  */
 public final class MainActivity extends Activity implements Dock.Listener, Header.Listener, AppCatalog.Listener {
-    static final String VERSION = "9.5.1";
+    static final String VERSION = "9.5.2";
 
     FrameLayout root;
     Glass.Backdrop backdrop;
@@ -123,13 +123,36 @@ public final class MainActivity extends Activity implements Dock.Listener, Heade
     }
 
     void switchTab(int idx) {
-        tab = Math.max(0, Math.min(tabs.length - 1, idx));
+        int nextIdx = Math.max(0, Math.min(tabs.length - 1, idx));
+        boolean changed = nextIdx != tab;
+        tab = nextIdx;
         for (int i = 0; i < tabs.length; i++) {
+            tabs[i].animate().cancel();
             tabs[i].setVisibility(i == tab && !searching ? View.VISIBLE : View.GONE);
         }
-        dock.select(tab, false);
+        if (changed && !searching) {
+            Pages.BasePage cur = tabs[tab];
+            cur.setAlpha(0.45f);
+            cur.setScaleX(0.985f);
+            cur.setScaleY(0.985f);
+            cur.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(220).setInterpolator(Ui.EMPHASIZED).start();
+        }
+        dock.select(tab, changed);
         header.setTitle(tabs[tab].title);
         onPageScroll(tabs[tab], tabs[tab].scroll.getScrollY());
+    }
+
+    @Override public void onBackPressed() {
+        if (searching) {
+            dock.setSearchMode(false);
+            onExitSearch();
+            return;
+        }
+        if (tab != 0) {
+            switchTab(0);
+            return;
+        }
+        super.onBackPressed();
     }
 
     void refreshAllPages() {

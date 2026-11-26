@@ -98,15 +98,22 @@ public class StateUiTest {
         seedSampleSuiteState();
         act.refreshAllPages();
         assertEquals("스테이트", act.getString(R.string.app_name));
-        assertEquals("9.5.1", MainActivity.VERSION);
+        assertEquals("9.5.2", MainActivity.VERSION);
         assertEquals(2, AppCatalog.pendingUpdates().size());
 
         shot(act.root, 1236, 2745, "phone-apps-light.png");
 
         act.switchTab(1);
+        org.robolectric.shadows.ShadowLooper.idleMainLooper(350, java.util.concurrent.TimeUnit.MILLISECONDS);
         shot(act.root, 1236, 2745, "phone-updates-light.png");
 
+        // Back button from Updates tab returns cleanly to Apps tab (0) without exiting
+        act.onBackPressed();
+        assertEquals(0, act.tab);
+        assertFalse(act.isFinishing());
+
         act.switchTab(2);
+        org.robolectric.shadows.ShadowLooper.idleMainLooper(350, java.util.concurrent.TimeUnit.MILLISECONDS);
         shot(act.root, 1236, 2745, "phone-settings-light.png");
 
         // Dark mode Apps Hub
