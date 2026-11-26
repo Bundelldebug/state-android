@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- 4-tile modular glass hub emblem (Good Lock-inspired module suite, One UI geometry) -->
+
+    <!-- Top-left frosted glass tile -->
+    <path android:pathData="M29,34 C29,30.1 32.1,27 36,27 L46,27 C49.9,27 53,30.1 53,34 L53,44 C53,47.9 49.9,51 46,51 L36,51 C32.1,51 29,47.9 29,44 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="29" android:startY="27" android:endX="53" android:endY="51">
+                <item android:offset="0.0" android:color="#F5FFFFFF" />
+                <item android:offset="1.0" android:color="#D2DCE8FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-left frosted glass tile -->
+    <path android:pathData="M29,62 C29,58.1 32.1,55 36,55 L46,55 C49.9,55 53,58.1 53,62 L53,72 C53,75.9 49.9,79 46,79 L36,79 C32.1,79 29,75.9 29,72 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="29" android:startY="55" android:endX="53" android:endY="79">
+                <item android:offset="0.0" android:color="#E8F1F5FF" />
+                <item android:offset="1.0" android:color="#B8C4D8FF" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Bottom-right frosted glass tile -->
+    <path android:pathData="M57,62 C57,58.1 60.1,55 64,55 L74,55 C77.9,55 81,58.1 81,62 L81,72 C81,75.9 77.9,79 74,79 L64,79 C60.1,79 57,75.9 57,72 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="linear" android:startX="57" android:startY="55" android:endX="81" android:endY="79">
+                <item android:offset="0.0" android:color="#F0F5FFFE" />
+                <item android:offset="1.0" android:color="#C8A5B4FC" />
+            </gradient>
+        </aapt:attr>
+    </path>
+
+    <!-- Top-right elevated active luminous module tile (rotated 10deg visual accent) -->
+    <group android:pivotX="70" android:pivotY="38" android:rotation="10">
+        <path android:pathData="M58,33 C58,29.1 61.1,26 65,26 L75,26 C78.9,26 82,29.1 82,33 L82,43 C82,46.9 78.9,50 75,50 L65,50 C61.1,50 58,46.9 58,43 Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="58" android:startY="26" android:endX="82" android:endY="50">
+                    <item android:offset="0.0" android:color="#FF5EEAD4" />
+                    <item android:offset="0.52" android:color="#FF38BDF8" />
+                    <item android:offset="1.0" android:color="#FF6366F1" />
+                </gradient>
+            </aapt:attr>
+        </path>
+        <!-- Crisp specular edge -->
+        <path
+            android:pathData="M62,31.5 C63.5,29.5 66,28.8 73,28.8"
+            android:fillColor="#00000000"
+            android:strokeColor="#D8FFFFFF"
+            android:strokeWidth="1.6"
+            android:strokeLineCap="round" />
+    </group>
+</vector>

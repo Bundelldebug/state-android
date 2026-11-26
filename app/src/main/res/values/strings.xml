@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">스테이트</string>
+    <string name="tab_apps">앱</string>
+    <string name="tab_updates">업데이트</string>
+    <string name="tab_settings">설정</string>
+    <string name="search_hint">앱 이름 또는 기능 검색</string>
+
+    <string name="cat_all">전체</string>
+    <string name="cat_media">미디어</string>
+    <string name="cat_productivity">생산성</string>
+    <string name="cat_system">시스템</string>
+
+    <string name="btn_open">열기</string>
+    <string name="btn_update">업데이트</string>
+    <string name="btn_install">설치</string>
+    <string name="btn_update_all">모두 업데이트</string>
+    <string name="btn_check_now">지금 확인</string>
+    <string name="btn_release_notes">패치노트</string>
+    <string name="btn_app_info">앱 정보</string>
+    <string name="btn_uninstall">제거</string>
+    <string name="btn_close">닫기</string>
+    <string name="btn_cancel">취소</string>
+
+    <string name="status_checking">GitHub 릴리스 확인 중…</string>
+    <string name="status_all_up_to_date">모든 설치된 앱이 최신 상태입니다</string>
+    <string name="status_updates_avail">업데이트 가능한 앱 %1$d개</string>
+    <string name="status_installed_summary">설치됨 %1$d / %2$d</string>
+    <string name="status_not_installed">미설치</string>
+    <string name="status_installed_ver">설치됨 v%1$s</string>
+    <string name="status_latest_ver">최신 v%1$s</string>
+    <string name="status_downloading">다운로드 중…</string>
+    <string name="status_allow_install">설치를 허용한 뒤 다시 눌러 주세요.</string>
+    <string name="status_install_failed">APK 다운로드 또는 설치에 실패했습니다.</string>
+    <string name="status_no_notes">릴리스 노트가 없습니다.</string>
+
+    <string name="settings_appearance">외관</string>
+    <string name="settings_updates">업데이트 관리</string>
+    <string name="settings_about">정보</string>
+    <string name="theme_label">테마</string>
+    <string name="theme_system">시스템 설정</string>
+    <string name="theme_light">라이트</string>
+    <string name="theme_dark">다크</string>
+    <string name="style_label">UI 스타일</string>
+    <string name="style_a">A 스타일 (글래스)</string>
+    <string name="style_g">G 스타일 (프로스트)</string>
+    <string name="accent_label">강조 색상</string>
+    <string name="accent_indigo">인디고</string>
+    <string name="accent_blue">블루</string>
+    <string name="accent_green">그린</string>
+    <string name="accent_red">레드</string>
+    <string name="accent_violet">바이올렛</string>
+    <string name="accent_teal">틸</string>
+    <string name="accent_orange">오렌지</string>
+    <string name="accent_pink">핑크</string>
+    <string name="accent_dynamic">시스템 동적 색상</string>
+    <string name="glass_transparency">글래스 투명도</string>
+    <string name="pref_auto_check">앱 시작 시 자동 업데이트 확인</string>
+    <string name="pref_show_uninstalled">미설치 앱도 허브에 표시</string>
+    <string name="about_version">버전</string>
+    <string name="about_repo">GitHub 저장소</string>
+</resources>

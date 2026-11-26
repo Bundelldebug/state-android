@@ -1,0 +1,4 @@
+﻿dist/
+*.apk
+keystore.jks
+tests/ui/output/
