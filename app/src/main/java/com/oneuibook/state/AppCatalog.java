@@ -142,9 +142,10 @@ final class AppCatalog {
         for (ModuleApp a : APPS) {
             a.latestVersion = p.getString("ver_" + a.id, a.latestVersion);
             a.releaseNotes = p.getString("notes_" + a.id, a.releaseNotes);
-            a.apkUrl = p.getString("apk_" + a.id, a.apkUrl);
+            String cachedApk = p.getString("apk_" + a.id, "");
+            a.apkUrl = isTrustedReleaseUrl(cachedApk, a.repo) ? cachedApk : "";
             String pg = p.getString("page_" + a.id, "");
-            if (!pg.isEmpty()) a.pageUrl = pg;
+            if (isTrustedReleaseUrl(pg, a.repo)) a.pageUrl = pg;
         }
     }
 
@@ -211,7 +212,7 @@ final class AppCatalog {
                     conn.setConnectTimeout(7000);
                     conn.setReadTimeout(7000);
                     conn.setRequestProperty("Accept", "application/vnd.github+json");
-                    conn.setRequestProperty("User-Agent", "State-Android-Hub/9.5.4");
+                    conn.setRequestProperty("User-Agent", "State-Android-Hub/" + MainActivity.VERSION);
                     if (conn.getResponseCode() == 200) {
                         String body = readStream(conn.getInputStream());
                         JSONObject o = new JSONObject(body);
@@ -219,14 +220,19 @@ final class AppCatalog {
                         if (!tag.isEmpty()) {
                             a.latestVersion = tag;
                             a.releaseNotes = o.optString("body");
-                            a.pageUrl = o.optString("html_url", a.pageUrl);
+                            String pg = o.optString("html_url", a.pageUrl);
+                            if (isTrustedReleaseUrl(pg, a.repo)) a.pageUrl = pg;
+                            a.apkUrl = "";
                             JSONArray assets = o.optJSONArray("assets");
                             if (assets != null) {
                                 for (int i = 0; i < assets.length(); i++) {
                                     JSONObject as = assets.optJSONObject(i);
                                     if (as != null && as.optString("name").toLowerCase(Locale.US).endsWith(".apk")) {
-                                        a.apkUrl = as.optString("browser_download_url");
-                                        break;
+                                        String cand = as.optString("browser_download_url");
+                                        if (isTrustedReleaseUrl(cand, a.repo)) {
+                                            a.apkUrl = cand;
+                                            break;
+                                        }
                                     }
                                 }
                             }
@@ -247,10 +253,85 @@ final class AppCatalog {
     private static String readStream(InputStream in) throws Exception {
         try (InputStream s = in; ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             byte[] buf = new byte[8192];
-            int n;
-            while ((n = s.read(buf)) > 0) bos.write(buf, 0, n);
+            int n, total = 0;
+            while ((n = s.read(buf)) > 0) {
+                total += n;
+                if (total > 1024 * 1024) throw new IllegalStateException("Response too large");
+                bos.write(buf, 0, n);
+            }
             return new String(bos.toByteArray(), StandardCharsets.UTF_8);
         }
+    }
+
+    /** Validates that release/APK download URLs strictly belong to the given GitHub repo over HTTPS. */
+    static boolean isTrustedReleaseUrl(String url, String repo) {
+        if (url == null || repo == null || !url.startsWith("https://")) return false;
+        try {
+            Uri u = Uri.parse(url);
+            String host = u.getHost();
+            if (host == null) return false;
+            String h = host.toLowerCase(Locale.ROOT);
+            if ("github.com".equals(h)) {
+                String p = u.getPath();
+                return p != null && p.toLowerCase(Locale.ROOT).startsWith("/" + repo.toLowerCase(Locale.ROOT) + "/");
+            }
+            return "objects.githubusercontent.com".equals(h) || "release-assets.githubusercontent.com".equals(h);
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    /**
+     * Verifies downloaded APK package name matches {@code a.pkg}, carries valid signing certificates,
+     * and (when updating an already-installed app) matches the installed app's signing certificate SHA-256.
+     */
+    static boolean verifyDownloadedApk(Context appCtx, Uri apkUri, File fallbackFile, ModuleApp a) {
+        try {
+            PackageManager pm = appCtx.getPackageManager();
+            String path = null;
+            if (fallbackFile != null && fallbackFile.isFile()) {
+                path = fallbackFile.getAbsolutePath();
+            } else if (apkUri != null && "file".equals(apkUri.getScheme())) {
+                path = apkUri.getPath();
+            }
+            if (path == null) return false;
+            int flags = PackageManager.GET_SIGNING_CERTIFICATES;
+            PackageInfo arch = pm.getPackageArchiveInfo(path, flags);
+            if (arch == null || !a.pkg.equals(arch.packageName)) return false;
+            java.util.Set<String> actual = certDigests(arch);
+            if (actual.isEmpty()) return false;
+            if (a.installed) {
+                PackageInfo cur = pm.getPackageInfo(a.pkg, flags);
+                java.util.Set<String> expected = certDigests(cur);
+                if (expected.isEmpty()) return false;
+                for (String d : actual) {
+                    if (expected.contains(d)) return true;
+                }
+                return false;
+            }
+            return true;
+        } catch (Throwable ignored) {
+            return false;
+        }
+    }
+
+    private static java.util.Set<String> certDigests(PackageInfo pi) {
+        java.util.Set<String> out = new java.util.HashSet<>();
+        if (pi == null || pi.signingInfo == null) return out;
+        android.content.pm.Signature[] sigs = pi.signingInfo.hasMultipleSigners()
+                ? pi.signingInfo.getApkContentsSigners()
+                : pi.signingInfo.getSigningCertificateHistory();
+        if (sigs == null) return out;
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            for (android.content.pm.Signature s : sigs) {
+                byte[] d = md.digest(s.toByteArray());
+                StringBuilder sb = new StringBuilder();
+                for (byte b : d) sb.append(String.format(Locale.US, "%02x", b & 0xff));
+                out.add(sb.toString());
+            }
+        } catch (Throwable ignored) {}
+        return out;
     }
 
     static boolean newer(String latest, String installed) {
@@ -305,8 +386,9 @@ final class AppCatalog {
 
     static void installOrUpdate(Activity act, ModuleApp a) {
         if (a == null || a.downloading) return;
-        if (a.apkUrl == null || a.apkUrl.isEmpty()) {
-            try { act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(a.pageUrl))); } catch (Throwable ignored) {}
+        if (!isTrustedReleaseUrl(a.apkUrl, a.repo)) {
+            String safePage = isTrustedReleaseUrl(a.pageUrl, a.repo) ? a.pageUrl : ("https://github.com/" + a.repo + "/releases");
+            try { act.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(safePage))); } catch (Throwable ignored) {}
             return;
         }
         if (!act.getPackageManager().canRequestPackageInstalls()) {
@@ -319,11 +401,12 @@ final class AppCatalog {
         }
         DownloadManager dm = act.getSystemService(DownloadManager.class);
         if (dm == null) return;
-        String fname = a.id + "-" + (a.latestVersion.isEmpty() ? "latest" : a.latestVersion) + ".apk";
-        File old = new File(act.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fname);
-        if (old.exists()) old.delete();
+        String safeVer = a.latestVersion == null || a.latestVersion.isEmpty() ? "latest" : a.latestVersion.replaceAll("[^A-Za-z0-9._-]", "");
+        String fname = a.id + "-" + safeVer + ".apk";
+        final File destFile = new File(act.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), fname);
+        if (destFile.exists()) destFile.delete();
         DownloadManager.Request req = new DownloadManager.Request(Uri.parse(a.apkUrl))
-                .setTitle(a.name + (a.latestVersion.isEmpty() ? "" : " " + a.latestVersion))
+                .setTitle(a.name + (a.latestVersion.isEmpty() ? "" : " " + safeVer))
                 .setMimeType("application/vnd.android.package-archive")
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                 .setDestinationInExternalFilesDir(act, Environment.DIRECTORY_DOWNLOADS, fname);
@@ -350,6 +433,11 @@ final class AppCatalog {
                 Uri apkUri = dm.getUriForDownloadedFile(id);
                 if (apkUri == null) {
                     Toast.makeText(appCtx, R.string.status_install_failed, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                if (!verifyDownloadedApk(appCtx, apkUri, destFile, a)) {
+                    try { destFile.delete(); } catch (Throwable ignored) {}
+                    Toast.makeText(appCtx, a.name + " APK 패키지·서명 검증에 실패해 설치를 중단했습니다.", Toast.LENGTH_LONG).show();
                     return;
                 }
                 Intent install = new Intent(Intent.ACTION_VIEW)

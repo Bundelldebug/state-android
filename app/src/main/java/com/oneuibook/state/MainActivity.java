@@ -16,7 +16,7 @@ import android.widget.FrameLayout;
  * Manages all 7 published apps (Prism, Play, Viewer, Workspace, Aurora, Checker, State).
  */
 public final class MainActivity extends Activity implements Dock.Listener, Header.Listener, AppCatalog.Listener {
-    static final String VERSION = "9.5.4";
+    static final String VERSION = "9.5.5";
 
     FrameLayout root;
     Glass.Backdrop backdrop;

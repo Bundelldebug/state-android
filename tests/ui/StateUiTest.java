@@ -108,7 +108,7 @@ public class StateUiTest {
         seedSampleSuiteState();
         act.refreshAllPages();
         assertEquals("스테이트", act.getString(R.string.app_name));
-        assertEquals("9.5.4", MainActivity.VERSION);
+        assertEquals("9.5.5", MainActivity.VERSION);
         assertEquals(2, AppCatalog.pendingUpdates().size());
 
         shot(act.root, 1236, 2745, "phone-apps-light.png");
@@ -153,5 +153,25 @@ public class StateUiTest {
                 a.installed = false; a.latestVersion = "9.5.2";
             }
         }
+    }
+
+    @Test public void securityHardeningChecks() {
+        // Trusted GitHub Releases HTTPS URL enforcement per repository
+        assertTrue(AppCatalog.isTrustedReleaseUrl(
+                "https://github.com/Bundelldebug/prism-music-android/releases/download/v9.5.28/PrismMusic_Android.apk",
+                "Bundelldebug/prism-music-android"));
+        assertTrue(AppCatalog.isTrustedReleaseUrl(
+                "https://objects.githubusercontent.com/github-production-release-asset/PrismMusic_Android.apk",
+                "Bundelldebug/prism-music-android"));
+        // Reject cross-repo, HTTP downgrade, and arbitrary hosts
+        assertFalse(AppCatalog.isTrustedReleaseUrl(
+                "https://github.com/attacker/prism-music-android/releases/download/v9.5.28/Prism.apk",
+                "Bundelldebug/prism-music-android"));
+        assertFalse(AppCatalog.isTrustedReleaseUrl(
+                "http://github.com/Bundelldebug/prism-music-android/releases/download/v9.5.28/Prism.apk",
+                "Bundelldebug/prism-music-android"));
+        assertFalse(AppCatalog.isTrustedReleaseUrl(
+                "https://evil.example.com/PrismMusic_Android.apk",
+                "Bundelldebug/prism-music-android"));
     }
 }
