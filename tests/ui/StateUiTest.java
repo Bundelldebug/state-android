@@ -49,7 +49,17 @@ public class StateUiTest {
     @Test public void catalogVersionAndMarkdownFormatting() {
         Context ctx = RuntimeEnvironment.getApplication();
         AppCatalog.init(ctx);
-        assertEquals(9, AppCatalog.APPS.size());
+        assertEquals(7, AppCatalog.APPS.size());
+        boolean foundPlay = false;
+        for (AppCatalog.ModuleApp a : AppCatalog.APPS) {
+            assertNotEquals("linux", a.id);
+            assertNotEquals("stock", a.id);
+            if ("play".equals(a.id)) {
+                assertEquals("플레이", a.name);
+                foundPlay = true;
+            }
+        }
+        assertTrue(foundPlay);
         assertTrue(AppCatalog.newer("9.5.17", "9.5.16"));
         assertFalse(AppCatalog.newer("9.5.16", "9.5.16"));
         assertFalse(AppCatalog.newer("9.5.15", "9.5.16"));
@@ -98,7 +108,7 @@ public class StateUiTest {
         seedSampleSuiteState();
         act.refreshAllPages();
         assertEquals("스테이트", act.getString(R.string.app_name));
-        assertEquals("9.5.3", MainActivity.VERSION);
+        assertEquals("9.5.4", MainActivity.VERSION);
         assertEquals(2, AppCatalog.pendingUpdates().size());
 
         shot(act.root, 1236, 2745, "phone-apps-light.png");
@@ -131,8 +141,8 @@ public class StateUiTest {
                 a.installed = true; a.installedVersion = "9.5.16"; a.latestVersion = "9.5.17";
                 a.releaseNotes = "## 프리즘 9.5.17\n- **YouTube Music** 탭 및 뮤직비디오 전환 추가\n- Kyant0 LiquidToggle 및 비트퍼펙트 어시스트 고도화";
             } else if ("play".equals(a.id)) {
-                a.installed = true; a.installedVersion = "9.5.6"; a.latestVersion = "9.5.7";
-                a.releaseNotes = "## 플레이 비디오 9.5.7\n- YouTube 네이티브 InnerTube 플레이어 및 Google · microG 로그인 추가";
+                a.installed = true; a.installedVersion = "9.5.12"; a.latestVersion = "9.5.13";
+                a.releaseNotes = "## 플레이 9.5.13\n- 홈·YouTube 통합 및 프리즘 리퀴드 글래스 통일";
             } else if ("aurora".equals(a.id)) {
                 a.installed = true; a.installedVersion = "9.5.1"; a.latestVersion = "9.5.1";
             } else if ("viewer".equals(a.id)) {

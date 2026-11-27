@@ -53,6 +53,7 @@ final class Dock extends FrameLayout {
     private final TextPaint labelPaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final TextPaint badgePaint = new TextPaint(Paint.ANTI_ALIAS_FLAG);
     private final Paint fill = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private final android.graphics.Path lensPath = new android.graphics.Path();
     private ValueAnimator searchAnim;
 
     final EditText field;
@@ -75,22 +76,24 @@ final class Dock extends FrameLayout {
         badgePaint.setTextSize(Ui.sp(9.5f));
         badgePaint.setTextAlign(Paint.Align.CENTER);
 
-        barGlass.blurDp = 3f;
+        barGlass.blurDp = Ui.barBlur();
         barGlass.refractDp = 17f;
-        barGlass.edgeDp = 24f;
+        barGlass.edgeDp = 26f;
         barGlass.outerDp = 7f;
-        barGlass.outerRefractDp = 11f;
+        barGlass.outerRefractDp = 12f;
+        barGlass.chroma = 0f;
         barGlass.vibrance = 1.35f;
-        barGlass.rim = 0.34f;
+        barGlass.rim = 0.32f;
+        barGlass.edgeDark = 0.32f;
+        barGlass.shadowAlpha = 0.16f;
 
         lensGlass.blur = false;
-        lensGlass.refractDp = 15f;
-        lensGlass.edgeDp = 22f;
-        lensGlass.outerDp = 7f;
-        lensGlass.outerRefractDp = 12f;
-        lensGlass.depthEffect = 0.6f;
+        lensGlass.refractDp = 22f;
+        lensGlass.edgeDp = 28f;
+        lensGlass.outerDp = 8f;
+        lensGlass.outerRefractDp = 14f;
         lensGlass.chroma = 0.9f;
-        lensGlass.rim = 0.54f;
+        lensGlass.rim = 0.6f;
         lensGlass.shadowAlpha = 0.16f;
 
         Runnable inv = this::invalidate;
@@ -248,8 +251,11 @@ final class Dock extends FrameLayout {
             c.drawRoundRect(lens, lens.height() / 2f, lens.height() / 2f, fill);
         }
         if (!Ui.gStyle && lf > 0.04f) {
-            lensGlass.tint = Ui.dark ? 0x18FFFFFF : 0x12FFFFFF;
-            lensGlass.strokeColor = Ui.dark ? 0x42FFFFFF : 0x1E000000;
+            lensGlass.tint = Ui.dark ? 0x0FFFFFFF : 0x0AFFFFFF;
+            lensGlass.strokeColor = Ui.dark ? 0x40FFFFFF : 0x1A000000;
+            lensGlass.mag = 1f + 0.14f * lf;
+            lensGlass.magX = lens.centerX();
+            lensGlass.magY = lens.centerY();
             lensGlass.alpha = lf * tabAlpha;
             lensGlass.shapes(lens, lens.height() / 2f, null, 0, null, 0);
             lensGlass.draw(c, this, backdrop);
@@ -258,9 +264,9 @@ final class Dock extends FrameLayout {
         // Draw tabs (dual-pass: inactive outside lens, accent color inside lens)
         drawTabs(c, Ui.alpha(Ui.text2(), tabAlpha));
         c.save();
-        android.graphics.Path lp = new android.graphics.Path();
-        lp.addRoundRect(lens, lens.height() / 2f, lens.height() / 2f, android.graphics.Path.Direction.CW);
-        c.clipPath(lp);
+        lensPath.reset();
+        lensPath.addRoundRect(lens, lens.height() / 2f, lens.height() / 2f, android.graphics.Path.Direction.CW);
+        c.clipPath(lensPath);
         drawTabs(c, Ui.alpha(Ui.ACCENT, tabAlpha));
         c.restore();
 

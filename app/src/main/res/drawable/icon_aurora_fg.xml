@@ -6,7 +6,12 @@
     android:viewportWidth="108"
     android:viewportHeight="108">
 
-    <!-- One UI style bold two-tone Aurora wave emblem (centered cleanly at 54,54 inside 66dp safe zone) -->
+    <!-- One UI style bold two-tone Aurora wave emblem (slightly scaled down to 82% for balanced squircle padding) -->
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.82"
+        android:scaleY="0.82">
 
     <!-- Soft translucent echo aurora wave (One UI signature two-tone depth) -->
     <path
@@ -29,4 +34,5 @@
             </gradient>
         </aapt:attr>
     </path>
+    </group>
 </vector>

@@ -293,7 +293,7 @@ final class Pages {
         }
     }
 
-    /** Instant Search overlay filtering all 9 suite modules. */
+    /** Instant Search overlay filtering all 7 suite modules. */
     static final class SearchPage extends BasePage {
         private String query = "";
 

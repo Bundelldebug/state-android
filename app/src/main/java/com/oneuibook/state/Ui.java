@@ -83,17 +83,17 @@ final class Ui {
     static float dpf(float v) { return v * density; }
     static float sp(float v) { return v * density * fontScale; }
 
-    static int bg() { return dark ? 0xFF06070B : 0xFFF2F3F8; }
-    static int groupedBg() { return dark ? 0xFF06070B : 0xFFF2F3F8; }
-    static int card() { return dark ? 0xFF151720 : 0xFFFFFFFF; }
-    static int text() { return dark ? 0xFFF8F9FC : 0xFF0E1117; }
-    static int text2() { return dark ? 0xA6E2E6F2 : 0x993C404B; }
-    static int text3() { return dark ? 0x66E2E6F2 : 0x553C404B; }
-    static int chip() { return dark ? 0xFF1D202C : 0xFFE6E8F0; }
-    static int separator() { return dark ? 0x1EFFFFFF : 0x12000000; }
+    static int bg() { return dark ? (gStyle ? 0xFF010102 : 0xFF000000) : (gStyle ? 0xFFF2F2F5 : 0xFFF2F2F7); }
+    static int groupedBg() { return dark ? (gStyle ? 0xFF010102 : 0xFF000000) : (gStyle ? 0xFFF2F2F5 : 0xFFF2F2F7); }
+    static int card() { return dark ? (gStyle ? 0xFF17171A : 0xFF1C1C1E) : 0xFFFFFFFF; }
+    static int text() { return dark ? (gStyle ? 0xFFFCFCFF : 0xFFFFFFFF) : (gStyle ? 0xFF010102 : 0xFF000000); }
+    static int text2() { return dark ? (gStyle ? 0xFF99999E : 0x99EBEBF5) : (gStyle ? 0xFF77777A : 0x993C3C43); }
+    static int text3() { return dark ? 0x66EBEBF5 : 0x4D3C3C43; }
+    static int chip() { return dark ? (gStyle ? 0xFF252528 : 0xFF1C1C1E) : (gStyle ? 0xFFE8E8ED : 0xFFE9E9EE); }
+    static int separator() { return dark ? (gStyle ? 0x1EFFFFFF : 0x24FFFFFF) : (gStyle ? 0x10000000 : 0x16000000); }
     static int pressed() { return dark ? 0x26FFFFFF : 0x12000000; }
-    static int glassTint() { return dark ? 0x5C191B24 : 0x5CFAFAFC; }
-    static int glassStroke() { return dark ? 0x30FFFFFF : 0x20000000; }
+    static int glassTint() { return dark ? 0x5C1C1C1E : 0x5CFAFAFC; }
+    static int glassStroke() { return dark ? 0x33FFFFFF : 0x24000000; }
     static int gStroke() { return dark ? 0x1FFFFFFF : 0x12000000; }
     static int gOutlineTop() { return dark ? 0x24FFFFFF : 0xB2FFFFFF; }
     static float cardRadius() { return gStyle ? 26f : 20f; }
@@ -101,7 +101,7 @@ final class Ui {
     static int gTint(int t) {
         int a = t >>> 24;
         if (a >= 242) return t;
-        int rgb = (dark ? 0xFF2B2D36 : 0xFFFCFCFF) & 0xFFFFFF;
+        int rgb = (dark ? 0xFF3A3A3D : 0xFFFCFCFF) & 0xFFFFFF;
         int minA = Math.round(lerp(dark ? 236f : 244f, dark ? 182f : 188f, glassT));
         return (Math.max(a, minA) << 24) | rgb;
     }
@@ -111,13 +111,13 @@ final class Ui {
     }
 
     static int barTint() {
-        return dark ? glassBlend(0xFF191B24, 0xA6191B24, 0x52191B24) : glassBlend(0xFFFAFAFC, 0xA8FAFAFC, 0x42FFFFFF);
+        return dark ? glassBlend(0xFF1C1C1E, 0xA61C1C1E, 0x521C1C1E) : glassBlend(0xFFFAFAFC, 0xA8FAFAFC, 0x40FFFFFF);
     }
 
     static float barBlur() { return glassT >= 0.5f ? lerp(6f, 2f, (glassT - 0.5f) * 2f) : 6f; }
 
     static int menuTint() {
-        return dark ? glassBlend(0xF5191B24, 0xB8191B24, 0x8C191B24) : glassBlend(0xF5FAFAFC, 0xBDFAFAFC, 0x8CFAFAFC);
+        return dark ? glassBlend(0xF51C1C1E, 0xB81C1C1E, 0x8C1C1C1E) : glassBlend(0xF5FAFAFC, 0xBDFAFAFC, 0x8CFAFAFC);
     }
 
     static int alpha(int color, float a) {

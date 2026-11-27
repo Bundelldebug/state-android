@@ -2,7 +2,6 @@ package com.oneuibook.state;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.LinearGradient;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.RecordingCanvas;
@@ -17,13 +16,12 @@ import android.view.ViewParent;
 import android.widget.FrameLayout;
 
 /**
- * Optical glass rendering engine inspired by Kyant0/AndroidLiquidGlass and MeiloX.
+ * Prism-unified optical glass rendering engine.
  * <p>
- * Combines Kyant0's analytic rounded-rect SDF, spherical {@code circleMap} lens refraction with
- * radial {@code depthEffect}, physically weighted 7-band spectral chromatic dispersion
- * (Red/Orange/Yellow/Green/Cyan/Blue/Violet), directional rim highlight, vibrancy boost, and
- * inner shadow with MeiloX's smooth-union metaball morphing ({@code smin}), steep outer lip bevel,
- * and interactive touch glow.
+ * {@link Backdrop} records everything behind the floating chrome into a {@link RenderNode}. Each glass
+ * element re-draws that node (blurred) through Prism's exact AGSL signed-distance-field shader that
+ * produces the rounded silhouette, smooth "metaball" unions between shapes, edge refraction, chromatic
+ * fringe, a magnifying lens and a specular rim. Falls back to blur-only (API 31/32) or a flat frosted fill.
  */
 final class Glass {
     private Glass() {}
@@ -44,30 +42,17 @@ final class Glass {
             "uniform float alphaMul;\n" +
             "uniform float2 magC;\n" +
             "uniform float mag;\n" +
-            "uniform float outerW;\n" +
+            "uniform float outerW;\n" +       // width of the thin, stronger rim band
             "uniform float outerRefr;\n" +
-            "uniform float edgeDark;\n" +
-            "uniform float2 lightDir;\n" +
-            "uniform float vibrance;\n" +
-            "uniform float4 press;\n" +
-            "uniform float depthEff;\n" +
-            "uniform float innerShad;\n" +
+            "uniform float edgeDark;\n" +     // faint dark line just inside the rim
+            "uniform float2 lightDir;\n" +    // direction the specular highlight comes from
+            "uniform float vibrance;\n" +     // saturation of what's seen through the glass
+            "uniform float4 press;\n" +       // x, y, radius, strength of the touch glow
             "float sdRR(float2 p, float4 r, float rad) {\n" +
             "  float2 hs = r.zw * 0.5;\n" +
             "  float rr = min(rad, min(hs.x, hs.y));\n" +
-            "  float2 q = abs(p - (r.xy + hs)) - (hs - float2(rr));\n" +
-            "  return length(max(q, float2(0.0))) + min(max(q.x, q.y), 0.0) - rr;\n" +
-            "}\n" +
-            "float2 gradSdRR(float2 cc, float2 hs, float rad) {\n" +
-            "  float2 corner = abs(cc) - (hs - float2(rad));\n" +
-            "  if (corner.x >= 0.0 || corner.y >= 0.0) {\n" +
-            "    float2 mc = max(corner, float2(0.0));\n" +
-            "    float ml = length(mc);\n" +
-            "    return ml > 0.0001 ? sign(cc) * (mc / ml) : float2(0.0);\n" +
-            "  } else {\n" +
-            "    float gx = step(corner.y, corner.x);\n" +
-            "    return sign(cc) * float2(gx, 1.0 - gx);\n" +
-            "  }\n" +
+            "  float2 q = abs(p - (r.xy + hs)) - hs + float2(rr, rr);\n" +
+            "  return length(max(q, float2(0.0, 0.0))) + min(max(q.x, q.y), 0.0) - rr;\n" +
             "}\n" +
             "float smin(float a, float b, float k) {\n" +
             "  if (k <= 0.0) { return min(a, b); }\n" +
@@ -80,83 +65,56 @@ final class Glass {
             "  if (s2.z > 0.5) { d = smin(d, sdRR(p, s2, s2r), smoothK); }\n" +
             "  return d;\n" +
             "}\n" +
-            "float circleMap(float x) {\n" +
-            "  float c = clamp(x, 0.0, 1.0);\n" +
-            "  return 1.0 - sqrt(max(0.0, 1.0 - c * c));\n" +
+            // height of a quarter-circle bevel: 1 at the rim, 0 once 'depth' reaches 'width'
+            "float bevel(float depth, float width) {\n" +
+            "  float t = clamp(depth / max(width, 0.001), 0.0, 1.0);\n" +
+            "  return 1.0 - sqrt(1.0 - (1.0 - t) * (1.0 - t));\n" +
             "}\n" +
             "float4 look(float2 at) { return float4(content.eval(at)); }\n" +
             "half4 main(float2 p) {\n" +
             "  float d = scene(p);\n" +
             "  if (d > 1.5) { return half4(0.0, 0.0, 0.0, 0.0); }\n" +
-            "  float2 hs = max(s0.zw * 0.5, float2(1.0));\n" +
-            "  float2 cc = p - (s0.xy + hs);\n" +
-            "  bool single = (s1.z <= 0.5 && s2.z <= 0.5);\n" +
-            "  float2 n = float2(0.0);\n" +
-            "  float2 gRim = float2(0.0);\n" +
-            "  if (single) {\n" +
-            "    float gradR = min(s0r * 1.5, min(hs.x, hs.y));\n" +
-            "    gRim = gradSdRR(cc, hs, gradR);\n" +
-            "    float cl = length(cc);\n" +
-            "    float2 radial = cl > 0.0001 ? (cc / cl) : float2(0.0);\n" +
-            "    float2 comb = gRim + depthEff * radial;\n" +
-            "    float cl2 = length(comb);\n" +
-            "    n = cl2 > 0.0001 ? (comb / cl2) : gRim;\n" +
-            "  } else {\n" +
-            "    float2 g = float2(scene(p + float2(1.0, 0.0)) - scene(p - float2(1.0, 0.0)),\n" +
-            "                      scene(p + float2(0.0, 1.0)) - scene(p - float2(0.0, 1.0)));\n" +
-            "    float gl = length(g);\n" +
-            "    gRim = gl > 0.0001 ? (g / gl) : float2(0.0);\n" +
-            "    n = gRim;\n" +
-            "  }\n" +
+            "  float2 g = float2(scene(p + float2(1.0, 0.0)) - scene(p - float2(1.0, 0.0)),\n" +
+            "                    scene(p + float2(0.0, 1.0)) - scene(p - float2(0.0, 1.0)));\n" +
+            "  float gl = length(g);\n" +
+            "  float2 n = float2(0.0, 0.0);\n" +
+            "  if (gl > 0.0001) { n = g / gl; }\n" +
             "  float depth = max(-d, 0.0);\n" +
-            "  float tBody = clamp(1.0 - depth / max(edgeW, 0.001), 0.0, 1.0);\n" +
-            "  float tLip = clamp(1.0 - depth / max(outerW, 0.001), 0.0, 1.0);\n" +
-            "  float bend = refr * circleMap(tBody) + outerRefr * circleMap(tLip) * tLip;\n" +
+            // body bevel + a thinner, steeper lip right at the rim
+            "  float lip = 1.0 - smoothstep(0.0, max(outerW, 0.001), depth);\n" +
+            "  float bend = refr * bevel(depth, edgeW) + outerRefr * bevel(depth, outerW) * lip;\n" +
             "  float2 q = magC + (p - magC) / mag;\n" +
             "  float2 off = n * bend;\n" +
-            "  float2 refracted = q + off;\n" +
-            "  float4 c = float4(0.0);\n" +
-            "  if (chroma > 0.001 && bend > 0.05) {\n" +
-            "    float cornerW = single\n" +
-            "        ? clamp(abs((cc.x * cc.y) / max(hs.x * hs.y, 1.0)) * 1.45, 0.0, 1.0)\n" +
-            "        : clamp(abs(gRim.x * gRim.y) * 2.0, 0.0, 1.0);\n" +
-            "    float2 disp = off * (chroma * (0.16 + 0.84 * cornerW));\n" +
-            "    float4 red    = look(refracted + disp);\n" +
-            "    float4 orange = look(refracted + disp * 0.666667);\n" +
-            "    float4 yellow = look(refracted + disp * 0.333333);\n" +
-            "    float4 green  = look(refracted);\n" +
-            "    float4 cyan   = look(refracted - disp * 0.333333);\n" +
-            "    float4 blue   = look(refracted - disp * 0.666667);\n" +
-            "    float4 purple = look(refracted - disp);\n" +
-            "    c.r = (red.r + orange.r + yellow.r) / 3.5 + purple.r / 7.0;\n" +
-            "    c.g = orange.g / 7.0 + (yellow.g + green.g + cyan.g) / 3.5;\n" +
-            "    c.b = (cyan.b + blue.b + purple.b) / 3.0;\n" +
-            "    c.a = (red.a + orange.a + yellow.a + green.a + cyan.a + blue.a + purple.a) / 7.0;\n" +
-            "  } else {\n" +
-            "    c = look(refracted);\n" +
+            "  float4 c = look(q + off);\n" +
+            "  if (chroma > 0.0 && bend > 0.05) {\n" +
+            // dispersion peaks where the normal runs diagonally (rounded corners) and fades on flat sides
+            "    float diag = clamp(abs(n.x * n.y) * 2.0, 0.0, 1.0);\n" +
+            "    float spread = chroma * (0.3 + 0.7 * diag);\n" +
+            "    float4 r1 = look(q + off * (1.0 - spread));\n" +
+            "    float4 r2 = look(q + off * (1.0 - 0.5 * spread));\n" +
+            "    float4 b1 = look(q + off * (1.0 + 0.5 * spread));\n" +
+            "    float4 b2 = look(q + off * (1.0 + spread));\n" +
+            "    c = float4((r1.r + r2.r) * 0.5, (r2.g + c.g * 2.0 + b1.g) * 0.25, (b1.b + b2.b) * 0.5, c.a);\n" +
             "  }\n" +
+            // vibrancy: what shows through the glass is a little richer than the page itself
             "  float lum = dot(c.rgb, float3(0.2126, 0.7152, 0.0722));\n" +
             "  c.rgb = clamp(mix(float3(lum), c.rgb, vibrance), 0.0, 1.0);\n" +
             "  c = float4(mix(c.rgb, tint.rgb, tint.a), mix(c.a, 1.0, tint.a));\n" +
+            // touch glow: soft gaussian bloom around the finger plus a faint lift of the whole surface
             "  if (press.w > 0.001) {\n" +
             "    float2 k = (p - press.xy) / max(press.z, 1.0);\n" +
             "    float bloom = exp(-0.5 * dot(k, k)) * press.w;\n" +
-            "    float3 lifted = c.rgb * 1.10 + float3(0.085);\n" +
-            "    c.rgb = mix(c.rgb, lifted, clamp(bloom + press.w * 0.24, 0.0, 1.0));\n" +
+            "    float3 lifted = c.rgb * 1.08 + float3(0.07);\n" +
+            "    c.rgb = mix(c.rgb, lifted, clamp(bloom + press.w * 0.25, 0.0, 1.0));\n" +
             "  }\n" +
-            "  if (innerShad > 0.001) {\n" +
-            "    float isBand = 1.0 - smoothstep(0.0, max(outerW * 2.2, 6.0), depth);\n" +
-            "    c.rgb *= (1.0 - innerShad * 0.14 * isBand);\n" +
-            "  }\n" +
-            "  float hd = dot(gRim, -lightDir);\n" +
-            "  float hiMag = pow(abs(hd), 1.35);\n" +
-            "  float facing = max(hd, 0.0);\n" +
-            "  float back = max(-hd, 0.0);\n" +
-            "  float shine = facing * hiMag + 0.42 * back * hiMag;\n" +
-            "  float darkLine = smoothstep(-3.2, -1.2, d) * (1.0 - smoothstep(-1.2, 0.2, d));\n" +
-            "  c.rgb = c.rgb * (1.0 - edgeDark * darkLine * (1.0 - shine));\n" +
-            "  float rimMask = smoothstep(-3.6, -0.2, d) * (1.0 - smoothstep(0.0, 1.0, d));\n" +
-            "  c.rgb = c.rgb + float3(rim * rimMask * (0.22 + 0.88 * shine));\n" +
+            // rim: thin dark inner line, then a highlight strongest facing the light and weaker opposite it
+            "  float line = smoothstep(-3.0, -1.2, d) * (1.0 - smoothstep(-1.2, 0.2, d));\n" +
+            "  float facing = max(dot(n, -lightDir), 0.0);\n" +
+            "  float back = max(dot(n, lightDir), 0.0);\n" +
+            "  float shine = facing * facing + 0.45 * back * back;\n" +
+            "  c.rgb = c.rgb * (1.0 - edgeDark * line * (1.0 - shine));\n" +
+            "  float rimMask = smoothstep(-3.5, 0.0, d) * (1.0 - smoothstep(0.0, 1.0, d));\n" +
+            "  c.rgb = c.rgb + float3(rim * rimMask * (0.25 + 0.75 * shine));\n" +
             "  float a = clamp(0.5 - d, 0.0, 1.0) * alphaMul;\n" +
             "  return half4(c * a);\n" +
             "}\n";
@@ -196,18 +154,16 @@ final class Glass {
         }
     }
 
-    /** One optical glass surface made of up to three rounded rects (smooth-unioned). Coordinates are view-local. */
+    /** One glass surface made of up to three rounded rects (smooth-unioned). Coordinates are view-local. */
     static final class Surface {
         final RectF a = new RectF(), b = new RectF(), c = new RectF();
         float ra, rb, rc;
         float smoothK;
-        float blurDp = 12f;
-        float refractDp = 11f, edgeDp = 18f, chroma = 0.0f, rim = 0.26f;
+        float blurDp = 14f;
+        float refractDp = 9f, edgeDp = 16f, chroma = 0.0f, rim = 0.18f;
         float mag = 1f, magX, magY;
-        float outerDp = 5.5f, outerRefractDp = 6f, edgeDark = 0.28f, vibrance = 1.30f;
-        float depthEffect = 0.36f;
-        float innerShadow = 0f;
-        float lightX = -0.7071f, lightY = -0.7071f; // Kyant0 45-degree specular light
+        float outerDp = 5f, outerRefractDp = 5f, edgeDark = 0.32f, vibrance = 1.25f;
+        float lightX = -0.45f, lightY = -0.89f;
         /** Touch glow in host-local px; strength 0 = off. */
         float pressX, pressY, pressR, pressAmt;
         int tint = Ui.glassTint();
@@ -252,13 +208,13 @@ final class Glass {
             outline();
             if (shadowAlpha > 0) {
                 fill.setColor(0x01FFFFFF);
-                fill.setShadowLayer(Ui.dpf(15), 0, Ui.dpf(4.5f), Ui.alpha(0xFF000000, shadowAlpha * alpha * (Ui.dark ? 2.1f : 1f)));
+                fill.setShadowLayer(Ui.dpf(14), 0, Ui.dpf(4), Ui.alpha(0xFF000000, shadowAlpha * alpha * (Ui.dark ? 2.2f : 1f)));
                 canvas.drawPath(path, fill);
                 fill.clearShadowLayer();
             }
             boolean hw = canvas.isHardwareAccelerated() && Ui.glass && ((backdrop != null && backdrop.recorded) || extra != null);
             if (hw) {
-                float pad = Ui.dpf(blurDp) * 2f + Ui.dpf(refractDp + outerRefractDp);
+                float pad = Ui.dpf(blurDp) * 2f + Ui.dpf(refractDp);
                 tmp.set(a);
                 if (!b.isEmpty()) tmp.union(b);
                 if (!c.isEmpty()) tmp.union(c);
@@ -335,7 +291,7 @@ final class Glass {
                     if (!b.isEmpty()) tmp.union(b);
                     if (!c.isEmpty()) tmp.union(c);
                     stroke.setStrokeWidth(Math.max(1.2f, Ui.dpf(1.1f)));
-                    stroke.setShader(new LinearGradient(0, tmp.top, 0, tmp.bottom,
+                    stroke.setShader(new android.graphics.LinearGradient(0, tmp.top, 0, tmp.bottom,
                             Ui.alpha(Ui.gOutlineTop(), alpha), 0x00FFFFFF, Shader.TileMode.CLAMP));
                     canvas.drawPath(path, stroke);
                     stroke.setShader(null);
@@ -353,7 +309,7 @@ final class Glass {
         private int signature(float dx, float dy, float br) {
             float[] v = {a.left + dx, a.top + dy, a.right + dx, a.bottom + dy, ra, b.left + dx, b.top + dy, b.right + dx, b.bottom + dy, rb,
                     c.left + dx, c.top + dy, c.right + dx, c.bottom + dy, rc, smoothK, refractDp, edgeDp, chroma, rim, alpha, mag, magX + dx, magY + dy,
-                    outerDp, outerRefractDp, edgeDark, vibrance, depthEffect, innerShadow, pressX + dx, pressY + dy, pressR, pressAmt, br, tint, Ui.dark ? 1 : 0};
+                    outerDp, outerRefractDp, edgeDark, vibrance, pressX + dx, pressY + dy, pressR, pressAmt, br, tint, Ui.dark ? 1 : 0};
             int h = 17;
             for (float f : v) h = h * 31 + Math.round(f * 4f);
             return h;
@@ -383,12 +339,10 @@ final class Glass {
             s.setFloatUniform("mag", Math.max(0.2f, mag));
             s.setFloatUniform("outerW", Ui.dpf(outerDp));
             s.setFloatUniform("outerRefr", Ui.dpf(outerRefractDp));
-            s.setFloatUniform("edgeDark", Ui.dark ? edgeDark * 0.42f : edgeDark);
+            s.setFloatUniform("edgeDark", Ui.dark ? edgeDark * 0.4f : edgeDark);
             s.setFloatUniform("lightDir", lightX, lightY);
             s.setFloatUniform("vibrance", vibrance);
             s.setFloatUniform("press", pressX + dx, pressY + dy, Math.max(1f, pressR), pressAmt);
-            s.setFloatUniform("depthEff", depthEffect);
-            s.setFloatUniform("innerShad", innerShadow);
         }
     }
 

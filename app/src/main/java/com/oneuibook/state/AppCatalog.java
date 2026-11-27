@@ -46,7 +46,7 @@ import java.util.regex.Pattern;
 
 /**
  * Central suite catalog & GitHub Releases updater for State ("스테이트").
- * Tracks all 9 published Android apps, detects installed status/versions via PackageManager,
+ * Tracks all 7 published Android apps, detects installed status/versions via PackageManager,
  * checks GitHub Releases in parallel, formats patch notes cleanly, and installs/updates APKs.
  */
 final class AppCatalog {
@@ -113,7 +113,7 @@ final class AppCatalog {
             APPS.add(new ModuleApp("prism", "프리즘", "리퀴드 글래스 음악 · Spotify · YouTube Music · 비트퍼펙트",
                     CAT_MEDIA, "com.oneuibook.prism", "Bundelldebug/prism-music-android", "PrismMusic_Android.apk",
                     0xFFFA2D48, Icons.APP_PRISM));
-            APPS.add(new ModuleApp("play", "플레이 비디오", "시네마 비디오 · 자막 · NPU 프로스케일러 · YouTube",
+            APPS.add(new ModuleApp("play", "플레이", "시네마 비디오 · 자막 · NPU 프로스케일러 · YouTube",
                     CAT_MEDIA, "com.oneuibook.play", "Bundelldebug/play-video-android", "PlayVideo_Android.apk",
                     0xFF387AFF, Icons.APP_PLAY));
             APPS.add(new ModuleApp("viewer", "뷰어", "HWP · HWPX · PDF · 오피스 문서 리치 뷰어",
@@ -125,15 +125,9 @@ final class AppCatalog {
             APPS.add(new ModuleApp("aurora", "오로라", "크로미움 기반 리퀴드 글래스 브라우저 · 웹 스토어 확장",
                     CAT_PRODUCTIVITY, "com.oneuibook.aurora", "Bundelldebug/aurora-android", "Aurora_Android.apk",
                     0xFF06B6D4, Icons.APP_AURORA));
-            APPS.add(new ModuleApp("linux", "리눅스 데스크탑", "루팅 없는 PRoot 리눅스 데스크탑 · 내장 VNC 뷰어",
-                    CAT_SYSTEM, "com.oneuibook.linux", "Bundelldebug/linux-desktop-android", "LinuxDesktop_Android.apk",
-                    0xFFF26D21, Icons.APP_LINUX));
-            APPS.add(new ModuleApp("checker", "체커", "구독 · 고정지출 캘린더 · 결제일 알림",
+            APPS.add(new ModuleApp("checker", "체커", "구독 · 고정지출 캘린더 · 실시간 환율 · 결제일 알림",
                     CAT_SYSTEM, "com.oneuibook.checker", "Bundelldebug/checker-android", "Checker_Android.apk",
                     0xFF7B61FF, Icons.APP_CHECKER));
-            APPS.add(new ModuleApp("stock", "주식", "실시간 시세 · 인터랙티브 차트 · 포트폴리오",
-                    CAT_SYSTEM, "com.oneuibook.stock", "Bundelldebug/stock-android", "Stock_Android.apk",
-                    0xFF19B36B, Icons.APP_STOCK));
             APPS.add(new ModuleApp("state", "스테이트", "통합 앱 모듈 허브 및 실시간 업데이트 관리자",
                     CAT_SYSTEM, "com.oneuibook.state", "Bundelldebug/state-android", "State_Android.apk",
                     0xFF4F46E5, Icons.APP_STATE));
@@ -217,7 +211,7 @@ final class AppCatalog {
                     conn.setConnectTimeout(7000);
                     conn.setReadTimeout(7000);
                     conn.setRequestProperty("Accept", "application/vnd.github+json");
-                    conn.setRequestProperty("User-Agent", "State-Android-Hub/9.5.0");
+                    conn.setRequestProperty("User-Agent", "State-Android-Hub/9.5.4");
                     if (conn.getResponseCode() == 200) {
                         String body = readStream(conn.getInputStream());
                         JSONObject o = new JSONObject(body);

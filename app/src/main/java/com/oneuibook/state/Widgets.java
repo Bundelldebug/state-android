@@ -300,7 +300,7 @@ final class Widgets {
         TextView meta = Ui.text(c, verLine, 13f, Ui.semibold, Ui.ACCENT);
         box.addView(meta, MW);
 
-        TextView pkgTv = Ui.text(c, app.pkg + " · " + app.repo, 11.5f, Ui.regular, Ui.text2());
+        TextView pkgTv = Ui.text(c, "GitHub · " + app.repo, 11.5f, Ui.regular, Ui.text2());
         LinearLayout.LayoutParams plp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         plp.topMargin = Ui.dp(3);
         plp.bottomMargin = Ui.dp(12);

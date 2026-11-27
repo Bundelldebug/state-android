@@ -12,11 +12,11 @@ import android.view.WindowInsetsController;
 import android.widget.FrameLayout;
 
 /**
- * State ("스테이트", v9.5.0) — Good Lock-inspired unified Android suite hub & update manager.
- * Manages all 9 published apps (Prism, Play Video, Viewer, Workspace, Aurora, Linux Desktop, Checker, Stock, State).
+ * State ("스테이트", v9.5.4) — Good Lock-inspired unified Android suite hub & update manager.
+ * Manages all 7 published apps (Prism, Play, Viewer, Workspace, Aurora, Checker, State).
  */
 public final class MainActivity extends Activity implements Dock.Listener, Header.Listener, AppCatalog.Listener {
-    static final String VERSION = "9.5.3";
+    static final String VERSION = "9.5.4";
 
     FrameLayout root;
     Glass.Backdrop backdrop;

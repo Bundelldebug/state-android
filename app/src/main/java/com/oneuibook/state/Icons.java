@@ -7,7 +7,7 @@ import android.graphics.Path;
 import android.graphics.RectF;
 import android.view.View;
 
-/** Crisp custom vector icons for State chrome and all 9 managed suite apps. */
+/** Crisp custom vector icons for State chrome and all 7 managed suite apps. */
 final class Icons {
     private Icons() {}
 
@@ -266,9 +266,7 @@ final class Icons {
                     case "viewer": return c.getDrawable(R.drawable.icon_viewer);
                     case "workspace": return adaptive(c, R.drawable.icon_workspace_bg, R.drawable.icon_workspace_fg);
                     case "aurora": return adaptive(c, R.drawable.icon_aurora_bg, R.drawable.icon_aurora_fg);
-                    case "linux": return adaptive(c, R.drawable.icon_linux_bg, R.drawable.icon_linux_fg);
                     case "checker": return adaptive(c, R.drawable.icon_checker_bg, R.drawable.icon_checker_fg);
-                    case "stock": return adaptive(c, R.drawable.icon_stock_bg, R.drawable.icon_stock_fg);
                     case "state": return adaptive(c, R.drawable.ic_launcher_bg, R.drawable.ic_launcher_fg);
                 }
             } catch (Throwable ignored) {}
